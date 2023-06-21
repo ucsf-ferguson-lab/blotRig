@@ -1,11 +1,23 @@
-## App ui script
-## Libraries
+#single script to start app
+
+#load req libraries
 library(shiny)
+library(lme4)
+library(lmerTest)
+library(tidyverse)
+library(DT)
 library(shinythemes)
 library(shinyjs)
 library(sortable)
 
+#load appFunctions
+source("appFunctions.R")
+
+#load appSections
 source("appSections.R")
+
+#load server
+source("server.R")
 
 ## UI
 shinyUI(navbarPage(title = "blobRig",
@@ -16,19 +28,17 @@ shinyUI(navbarPage(title = "blobRig",
                    useShinyjs(),
                    # position = c("fixed-top"),
                    
-                   # ----------------------------------
-                   # Home panel
+                   # ---------------------------------- home
                    tabPanel("Home",
                             includeHTML("home.html"),
                    ),
                    
-                   # ----------------------------------
-                   tabPanel("Analize",
+                   # ---------------------------------- analyze
+                   tabPanel("Analyze",
                             analyzer(),
                    ),
                    
-                   # ----------------------------------
-                   # TODO ( add About section)
+                   # ---------------------------------- about
                    tabPanel("About",
                             includeHTML("about.html")
                    )

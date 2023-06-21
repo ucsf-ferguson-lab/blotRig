@@ -1,14 +1,14 @@
 # App server script
 
-library(shiny)
-library(lme4)
-library(lmerTest)
-library(tidyverse)
-library(DT)
+# library(shiny)
+# library(lme4)
+# library(lmerTest)
+# library(tidyverse)
+# library(DT)
 # library(MASS)
 # install.packages("MASS")
 
-source("appFunctions.R")
+# source("appFunctions.R")
 
 function(input, output, session) {
   disable("run")
