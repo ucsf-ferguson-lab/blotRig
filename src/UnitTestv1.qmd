@@ -38,4 +38,3 @@ template <- gelOrder(16,4,4,exDF_dupes$allNames)
 ```{r}
 rm(template)
 ```
-

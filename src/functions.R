@@ -18,14 +18,19 @@ findDupes <- function(inputDF,show="all"){
   }
 }
 
-#duplicated subject names in console output
+#'duplicated subject names in console output
+#'outputs 0 if no duplicates found
 listDupes <- function(inputDF){
-  as.vector(
+  temp <- as.vector(
     t(
       findDupes(inputDF,show="dupes") %>% 
         dplyr::select(-dupe)
     )
   )
+  if(length(temp)==0){
+    temp <- 0
+  }
+  return(temp)
 }
 
 #create gel template
@@ -61,8 +66,8 @@ minGels <- function(numLanes,numGroups,perGroup){
 
 #'calculate num groups to push to next lane
 groupRemainder <- function(numLanes,numGroups,perGroup){
-  temp <- floor(
-    ((numGroups*perGroup)+1)/numLanes
+  temp <- ceiling(
+    ((numGroups*perGroup)+minGels(numLanes,numGroups,perGroup))/numLanes
   )
   return(temp)
 }
@@ -141,3 +146,29 @@ gelOrder <- function(numLanes,numGroups,perGroup,subjectNames){
   
   return(temp_gel)
 }
+
+#'center the samples (not including ladder)
+centerSamples <- function(inputDF){
+  naIndex <- which(is.na(inputDF),arr.ind=TRUE) %>%
+    as.data.frame() %>%
+    dplyr::filter(col==min(col)|col==max(col)) %>%
+    aggregate(col~row,FUN=c) %>%
+    dplyr::mutate(nastart=unlist(col[,1])) %>% #na starts
+    dplyr::mutate(nastop=unlist(col[,2])) %>% #na ends (typically ncol(inputDF))
+    select(-col) %>%
+    dplyr::mutate(lengthNA=nastop-nastart+1) %>% #add 1 for index
+    dplyr::mutate(gap=floor(lengthNA/2)) #calculate gap to shift by
+  
+  for(i in 1:nrow(naIndex)){
+    temp <- as.list(inputDF[i,]) %>% 
+      unlist() %>%
+      append(rep(NA,naIndex$gap[i]),after=1) %>% #shift everything after Ladder over by gap
+      head(-naIndex$gap[i]) #rm same amount NA from end of list
+    
+    #overwrite lane in inputDf
+    inputDF[i,] <- temp
+  }
+  return(inputDF)
+}
+
+
