@@ -48,15 +48,11 @@ gelTemplate <- function(numLanes){
   
   #fix row & col labels
   rownames(temp_gel) <- NULL
-  names(temp_gel) <- stringr::str_replace(
-    names(temp_gel),"V","Lane "
-  )
-  
   return(temp_gel)
 }
 
 #'calculate min num gels required to fit all samples
-#'numLanes-1 to account for ladder
+#'numLanes-1 to account for ladder (assume can fit all on single gel)
 minGels <- function(numLanes,numGroups,perGroup){
   temp <- ceiling(
     (numGroups*perGroup)/(numLanes-1)
@@ -64,109 +60,87 @@ minGels <- function(numLanes,numGroups,perGroup){
   return(temp)
 }
 
-#'calculate num groups to push to next lane
-groupRemainder <- function(numLanes,numGroups,perGroup){
-  temp <- ceiling(
-    ((numGroups*perGroup)+minGels(numLanes,numGroups,perGroup))/numLanes
-  )
-  return(temp)
-}
-
-#'create start & stop points
-createBreaks <- function(numLanes,numGroups,perGroup,totalSamples){
-  index <- list()
+#create baseline gel
+gelBaseline <- function(totalSamples,perLine,entryID){
+  #create template (assume single row)
+  tempDF <- gelTemplate(totalSamples)
+  tempDF[1,] <- entryID
   
-  #num groups in next gel
-  fornext <- groupRemainder(numLanes,numGroups,perGroup)
+  #create list of multiples
+  cutpoints <- seq(1,totalSamples,perLine)
   
-  #num samples per gel
-  perGel <- numLanes-(fornext*perGroup)
-  if(perGel<=perGroup+1){
-    perGel <- perGroup+1
-  }else{
-    perGel <- perGel
-  }
-  
-  # if(perGel>=0){
-  #   perGel <- perGel
-  # }else{
-  #   perGel <- perGroup #smallest num that will still meet req
-  # }
-  
-  #create breakpoints
-  index <- seq(1,totalSamples,perGel)
-  return(index)
-}
-
-#'subset samples into groups 
-createGroups <- function(start,end){
-  temp <- exDF_dupes$allNames[start:end] %>%
-    # dplyr::select(-dupe) %>%
-    unlist()
-  return(temp)
-}
-
-#'create gel template, each row is a separate gel
-gelOrder <- function(numLanes,numGroups,perGroup,subjectNames){
-  #create temp df
-  temp_gel <- gelTemplate(numLanes)
-  
-  #calculate min # gels req
-  gels <- minGels(numLanes,numGroups,perGroup)
-  
-  #num samples (includes ladder)
-  totalSamples <- (numGroups*perGroup)+gels
-  
-  #all samples + ladder fit on single gel
-  if(totalSamples<=numLanes){
-    temp_gel[1,1] <- "Ladder"
-    temp_gel[1,2:(totalSamples+1)] <- subjectNames[1:totalSamples]
-  }
-
-  #multiple gels req
-  else{
-    temp_gel[1:gels,1] <- "Ladder"
-
-    #det which samples are moved to next gel
-    index <- createBreaks(numLanes,numGroups,perGroup,totalSamples)
-
-    for(i in 1:gels){
-      #not end gel
-      if(i<gels){
-        temp_gel[i,2:index[i+1]] <- createGroups(index[i],index[i+1])
-      }
-      #end gel (will be truncated)
-      else{
-        #1 for counting, 1 for displacement by ladder
-        loc <- (length(subjectNames)-index[i])+2
-        temp_gel[i,2:loc] <- createGroups(index[i],length(subjectNames))
-      }
+  if(length(cutpoints)!=1){
+    #shift cols
+    for(i in 2:length(cutpoints)){
+      Lremainder <- totalSamples-perLine*(i-1)
+      tempDF[i,1:Lremainder] <- tempDF[i-1,cutpoints[2]:ncol(tempDF)]
     }
+    
+    #rm extra info
+    tempDF[,cutpoints[2]:ncol(tempDF)] <- NA
+    
+    #add ladder as col1
+    tempDF <- tempDF[,-((cutpoints[2]):ncol(tempDF))] %>%
+      dplyr::mutate(ladder="Ladder") %>%
+      dplyr::relocate(ladder,.before=1)
+  }else{
+    tempDF <- tempDF %>%
+      dplyr::mutate(ladder="Ladder") %>%
+      dplyr::relocate(ladder,.before=1)
+  }
+  return(tempDF)
+}
+
+#add cols to match set criteria
+addCols <- function(inputDF,numLanes){
+  #add NA cols till ncol(inputDF)=numLanes
+  if(ncol(inputDF)<numLanes){
+    startPoint <- ncol(inputDF)+1
+    inputDF[,startPoint:numLanes] <- NA
   }
   
-  return(temp_gel)
+  #convert names to Lane #
+  names(inputDF) <- paste("Lane",1:ncol(inputDF),sep=" ")
+  return(inputDF)
 }
 
 #'center the samples (not including ladder)
 centerSamples <- function(inputDF){
-  naIndex <- which(is.na(inputDF),arr.ind=TRUE) %>%
+  #det if even/odd num full NA cols
+  dfNA <-colSums(is.na(inputDF)) %>%
     as.data.frame() %>%
-    dplyr::filter(col==min(col)|col==max(col)) %>%
-    aggregate(col~row,FUN=c) %>%
-    dplyr::mutate(nastart=unlist(col[,1])) %>% #na starts
-    dplyr::mutate(nastop=unlist(col[,2])) %>% #na ends (typically ncol(inputDF))
-    select(-col) %>%
-    dplyr::mutate(lengthNA=nastop-nastart+1) %>% #add 1 for index
-    dplyr::mutate(gap=floor(lengthNA/2)) #calculate gap to shift by
+    filter(.==nrow(inputDF))
+  rownames(dfNA) <- NULL
+  names(dfNA) <- "Check"
   
-  for(i in 1:nrow(naIndex)){
-    temp <- as.list(inputDF[i,]) %>% 
-      unlist() %>%
-      append(rep(NA,naIndex$gap[i]),after=1) %>% #shift everything after Ladder over by gap
-      head(-naIndex$gap[i]) #rm same amount NA from end of list
+  if(nrow(dfNA)%%2==1){ #odd num full NA cols -> no centering done
+    #'no centering req (placeholder)
+    #'inputDF <- inputDF is not a good idea bcuz making extra copy & thus wasting memory
+  }else{
+    naIndex <- which(is.na(inputDF),arr.ind=TRUE) %>%
+      as.data.frame()
     
-    #overwrite lane in inputDf
-    inputDF[i,] <- temp
+    #if there are NA cols
+    if(nrow(naIndex)>0){
+      naIndex <- naIndex %>%
+        dplyr::filter(col==min(col)|col==max(col)) %>%
+        aggregate(col~row,FUN=c) %>%
+        dplyr::mutate(nastart=unlist(col[,1])) %>% #NA starts
+        dplyr::mutate(nastop=unlist(col[,2])) %>% #NA ends (typically ncol(inputDF))
+        dplyr::select(-col) %>%
+        dplyr::mutate(lengthNA=nastop-nastart+1) %>% #add 1 for index
+        dplyr::mutate(gap=floor(lengthNA/2)) #calculate gap to shift by
+      
+      for(i in 1:nrow(naIndex)){
+        temp <- as.list(inputDF[i,]) %>% 
+          unlist() %>%
+          append(rep(NA,naIndex$gap[i]),after=1) %>% #shift everything after Ladder over by gap
+          head(-naIndex$gap[i]) #rm same amount NA from end of list
+        
+        #overwrite lane in inputDf
+        inputDF[i,] <- temp
+      }
+    }
   }
   return(inputDF)
 }

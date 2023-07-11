@@ -5,6 +5,8 @@ editor_options:
   chunk_output_type: console
 ---
 
+## Load library + functions
+
 ```{r}
 source("./src/functions.R")
 
@@ -21,6 +23,8 @@ subjects <- as.vector(t(exDF))
 
 ## Find Duplicates
 
+The following code chunks are examples of duplicate sample detection.
+
 ```{r}
 #reset duplicate
 exDF[2,2] <- "b66"
@@ -35,7 +39,7 @@ if(listDupes(exDF)==0){
 ```
 
 ```{r}
-exDF <- read_csv("./Sandbox/inputCSV.csv")
+# exDF <- read_csv("./Sandbox/inputCSV.csv")
 
 #function to simplify typing same thing each time
 ld <- function(){
@@ -51,102 +55,50 @@ exDF[1,3] <- "b61"
 ld()
 ```
 
-## Generate Template
+## Minimum gels req (WIP)
+
+Use the `minGels` function to determine minimum number of gels required to fit all samples + ladder per gel.
 
 ```{r}
-createTemplate <- function(lanes,groups,size,df,subjects){
-  #min num samples doesn't fit on single gel
-  if(lanes<size+1){
-    stop("Your gel does not contain enough lanes to meet minimum requirements.")
-  }
-  #1 group + ladder fits exactly on single gel
-  else if(lanes==size+1){
-    num_gels <- groups #num gels = num groups (1 ladder each)
-    temp_gel <- df %>%
-      dplyr::mutate(Group="Ladder") %>%
-      dplyr::relocate(Group,.before=1)
-    temp_gel <- rbind(colnames(temp_gel),temp_gel)
-    names(temp_gel) <- paste("Lane",1:ncol(temp_gel),sep="_")
-  }
-  #all other cases
-  else{
-    num_gels <- minGels(lanes,groups,size) #min num gels req to fit all samples
-    totalSamples <- (groups*size)+num_gels #add ladder per gel
-    
-    next_gel <- groupRemainder(lanes,groups,size) #how many groups in next gel
-    current_gel <- totalSamples-(next_gel*size)-2 #samples to place in current gel
-    
-    temp_gel <- gelTemplate(lanes) #create gel template
-    
-    #cutoff points for each gel
-    index <- seq(1,totalSamples,current_gel)
-    # index <- append(index,length(subjects))
-    if(tail(index,1)<length(subjects)){
-      index <- append(index,length(subjects))
-    }else{
-      index[length(index)] <- length(subjects)
-    }
-    
-    for(i in 1:num_gels){
-      temp_gel[i,1] <- "Ladder"
-      
-      #anything other than end
-      if(i<num_gels){
-        temp_gel[i,2:(index[i+1])] <- subjects[index[i]:(index[i+1]-1)]
-      }else{
-        stopLoc <- length(subjects)-index[i]+2
-        temp_gel[i,2:stopLoc] <- subjects[(index[i]):length(subjects)]
-      }
-    }
-  }
-  
-  return(temp_gel)
-}
+minGels(
+  numLanes = 6,
+  numGroups = 4,
+  perGroup = 4
+)
 ```
 
-```{r}
-ex_result <- createTemplate(16,4,4,exDF,subjects)
-View(ex_result)
-```
+## Create gels
 
-works but some lane # configs can split group
-  can add logic in frontend such that lanes will be changed to (perGroup^n)+1
+The following 2 functions create a non-centered gel according to the following rules:
 
-### Create seq cutoffs
+1. all members of a group must be represented ≥ 1
+1. 2 samples from same group can't be next to each other
 
 ```{r}
-tester <- function(lanes,groups,size,subjects){
-  num_gels <- minGels(lanes,groups,size) #min num gels req to fit all samples
-  totalSamples <- (groups*size)+num_gels #add ladder per gel
-    
-  next_gel <- groupRemainder(lanes,groups,size) #how many groups in next gel
-  current_gel <- totalSamples-(next_gel*size)-2 #samples to place in current gel
-    
-  temp_gel <- gelTemplate(lanes) #create gel template
-    
-  #cutoff points for each gel
-  index <- seq(1,totalSamples,current_gel)
-  
-  if(tail(index,1)<length(subjects)){
-    index <- append(index,length(subjects))
-  }else{
-    index[length(index)] <- length(subjects)
-  }
-  
-  return(index)
-}
-```
+gels <- gelBaseline(
+  totalSamples = 16,
+  perLine = 8,
+  entryID = subjects
+)
 
-```{r}
-tester(16,4,4,subjects)
+gels <- addCols(
+  inputDF = gels,
+  numLanes = 11
+)
+
+View(gels)
 ```
 
 ## Center Samples on Gel
 
+The `centerSamples` function takes a non-centered gel and attempts to center the samples (ladder is not centered).
+
 ```{r}
-centeredGel <- centerSamples(ex_result)
+centeredGel <- centerSamples(gels)
 View(centeredGel)
 ```
+
+Each row is considered a separate gel.
 
 ## rm
 
