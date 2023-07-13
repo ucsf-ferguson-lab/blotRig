@@ -18,6 +18,7 @@ library(tidyverse)
 
 ```{r}
 exDF <- read_csv("./Sandbox/inputCSV.csv")
+exDF[2,2] <- "b66"
 subjects <- as.vector(t(exDF))
 ```
 
@@ -26,21 +27,6 @@ subjects <- as.vector(t(exDF))
 The following code chunks are examples of duplicate sample detection.
 
 ```{r}
-#reset duplicate
-exDF[2,2] <- "b66"
-# listDupes(exDF)
-
-#0=no duplicates found
-if(listDupes(exDF)==0){
-  print("No duplicates found.")
-}else{
-  print("There are duplicated sample names.")
-}
-```
-
-```{r}
-# exDF <- read_csv("./Sandbox/inputCSV.csv")
-
 #function to simplify typing same thing each time
 ld <- function(){
   return(listDupes(exDF))
@@ -53,6 +39,42 @@ ld()
 exDF[4,] <- "d72"
 exDF[1,3] <- "b61"
 ld()
+```
+
+```{r}
+#reset duplicate
+exDF <- read_csv("./Sandbox/inputCSV.csv")
+exDF[2,2] <- "b66"
+# listDupes(exDF)
+
+View(exDF)
+
+#0=no duplicates found
+if(listDupes(exDF)==0){
+  print("No duplicates found.")
+}else{
+  print("There are duplicated sample names.")
+}
+```
+
+## Uneven samples in groups
+
+The `actualNumSamples` function removes any NA values (unequal number of subjects per group) and outputs the true subject list.
+
+User can then use `length()` to give an integer count.
+
+```{r}
+#add NA values
+subjects_raw <- subjects %>%
+  append(c(NA,"o42",NA,NA,"g60","t90"),2)
+
+subjects_raw
+
+#drop NA values
+subjects_t <- actualNumSamples(subjects_raw)
+
+#num actual subjects/samples
+length(subjects_t)
 ```
 
 ## Minimum gels req (WIP)
@@ -86,19 +108,33 @@ gels <- addCols(
   numLanes = 11
 )
 
-View(gels)
+# View(gels)
 ```
 
 ## Center Samples on Gel
 
-The `centerSamples` function takes a non-centered gel and attempts to center the samples (ladder is not centered).
+The `centerSamples` function takes a non-centered gel and attempts to center the samples (ladder is not centered and is left at first lane).
 
 ```{r}
 centeredGel <- centerSamples(gels)
-View(centeredGel)
+# View(centeredGel)
 ```
 
 Each row is considered a separate gel.
+
+## Export user template
+
+Create user template with everything except for quant filled in.
+
+```{r}
+user_template <- finalizedDF(
+  inputGel = centeredGel,
+  sourceDF = exDF,
+  numReps = 3
+)
+
+View(user_template)
+```
 
 ## rm
 

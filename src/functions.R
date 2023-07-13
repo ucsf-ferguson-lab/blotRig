@@ -145,4 +145,88 @@ centerSamples <- function(inputDF){
   return(inputDF)
 }
 
+#'takes all samples vector & drops all NA values
+#'can pass result into length() for actual number of samples
+actualNumSamples <- function(totalSamples){
+  temp <- totalSamples[!is.na(totalSamples)]
+  return(temp)
+}
 
+#'convert centeredGel into template for user to fill in quant
+templateOutput <- function(inputGel){
+  elist <- apply(inputGel,1,function(row) as.data.frame(t(row))) %>%
+    lapply(function(x){
+      #transpose
+      temp <- x %>%
+        t() %>%
+        as.data.frame()
+      
+      #add lane num as col 1
+      temp <- temp %>%
+        dplyr::mutate(LaneNum=rownames(temp)) %>%
+        dplyr::relocate(LaneNum,.before=1)
+      rownames(temp) <- NULL
+      
+      #return
+      temp
+    }) 
+  
+  #add gel number (based on row num from centered inputGel)
+  elist <- lapply(1:length(elist),function(x){
+    temp <- elist[[x]] %>%
+      dplyr::mutate(Gel_Number=x)
+  }) %>%
+    bind_rows() %>%
+    
+    #convert to sample template output
+    dplyr::mutate(
+      TechnicalRep=NA,
+      Quant=NA
+    ) %>%
+    dplyr::relocate(c(V1,TechnicalRep),.before=1) %>%
+    dplyr::filter(!is.na(V1))
+  
+  #rename colnames (always the same)
+  names(elist) <- c("Sample_ID","Technical_Replication","Lane",
+                    "Gel_Number","Protein_Quant")
+  return(elist)
+}
+
+#fill in groups from sourceDF
+matchNfill <- function(sourceDF,finalDF){
+  temp <- sourceDF %>%
+    tidyr::pivot_longer(cols=(1:ncol(sourceDF)),
+                        names_to="Group",
+                        values_to="Sample_ID") %>%
+    dplyr::right_join(finalDF,by="Sample_ID") %>%
+    dplyr::relocate(Group,.after=Sample_ID) %>%
+    dplyr::mutate(Group=ifelse(Sample_ID=="Ladder","Ladder",Group)) #replace NA w/ Ladder in Group col
+  return(temp)
+}
+
+#'duplicate x number of times (based on user input of how many technical replications)
+techRep <- function(inputDF,numReps){
+  temp <- lapply(1:numReps,function(x){
+    inputDF %>%
+      dplyr::mutate(Technical_Replication=x) #add technical rep
+  }) %>%
+    bind_rows() #combine all together
+  return(temp)
+}
+
+#'create finalized template (glues all other functions together)
+  #'create template from inputGel (centered gel)
+  #'fill in groups from sourceDF
+  #'num of technical replications (default=1)
+  #'sort (rep,gel) 
+  #'  nchar(lane) before lane = 1,2,3... before 10
+  #'reorder
+finalizedDF <- function(inputGel,sourceDF,numReps=1){
+  temp <- inputGel %>%
+    templateOutput() %>%
+    matchNfill(sourceDF=sourceDF) %>%
+    techRep(numReps) %>%
+    dplyr::arrange(Technical_Replication,Gel_Number,nchar(Lane),Lane) %>%
+    dplyr::relocate(Gel_Number,.before=Technical_Replication)
+  return(temp)
+}
