@@ -113,15 +113,15 @@ centerSamples <- function(inputDF){
   rownames(dfNA) <- NULL
   names(dfNA) <- "Check"
   
-  if(nrow(dfNA)%%2==1){ #odd num full NA cols -> no centering done
+  if(nrow(dfNA)==1){
     #'no centering req (placeholder)
-    #'inputDF <- inputDF is not a good idea bcuz making extra copy & thus wasting memory
+    #'inputDF <- inputDF is not a good idea bcuz making extra copy, thus wasting memory
   }else{
     naIndex <- which(is.na(inputDF),arr.ind=TRUE) %>%
       as.data.frame()
     
     #if there are NA cols
-    if(nrow(naIndex)>0){
+    if(nrow(naIndex)>=2){
       naIndex <- naIndex %>%
         dplyr::filter(col==min(col)|col==max(col)) %>%
         aggregate(col~row,FUN=c) %>%
@@ -150,6 +150,21 @@ centerSamples <- function(inputDF){
 actualNumSamples <- function(totalSamples){
   temp <- totalSamples[!is.na(totalSamples)]
   return(temp)
+}
+
+#'shift all samples to left if lane is empty (aka group is missing samples or unequal num samples per group)
+shiftLanes <- function(inputDF){
+  for(i in 1:nrow(inputDF)){
+    #rm NA
+    temp <- inputDF[i,] %>%
+      unlist()
+    tempItem <- temp[!is.na(temp)]
+    
+    #replace row w/ new list
+    inputDF[i,] <- NA
+    inputDF[i,1:length(tempItem)] <- tempItem
+  }
+  return(inputDF)
 }
 
 #'convert centeredGel into template for user to fill in quant

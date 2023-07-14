@@ -22,7 +22,7 @@ exDF[2,2] <- "b66"
 subjects <- as.vector(t(exDF))
 ```
 
-## Find Duplicates
+### Find Duplicates
 
 The following code chunks are examples of duplicate sample detection.
 
@@ -57,7 +57,7 @@ if(listDupes(exDF)==0){
 }
 ```
 
-## Uneven samples in groups
+### Uneven samples in groups
 
 The `actualNumSamples` function removes any NA values (unequal number of subjects per group) and outputs the true subject list.
 
@@ -111,7 +111,7 @@ gels <- addCols(
 # View(gels)
 ```
 
-## Center Samples on Gel
+### Center Samples on Gel
 
 The `centerSamples` function takes a non-centered gel and attempts to center the samples (ladder is not centered and is left at first lane).
 
@@ -136,8 +136,66 @@ user_template <- finalizedDF(
 View(user_template)
 ```
 
-## rm
+## Account for NA values in input
+
+The following code chunk tests a use-case where there are unequal amount of samples per group.
+
+```{r}
+#add NA values
+exdf_na <- exDF
+exdf_na[2,2] <- NA
+exdf_na[4,3] <- NA
+
+#transpose to vector
+na_subjects <- as.vector(t(exdf_na))
+
+#'create basic gel
+#'  ensure samples + correct num lanes
+#'left shift all rows to fill in NA gaps (won't affect groupings)
+na_gels <- gelBaseline(
+  totalSamples = 16,
+  perLine = 8,
+  entryID = na_subjects
+) %>%
+  addCols(
+    numLanes = 11
+  ) %>%
+  shiftLanes()
+
+#center gel (can't pipe from prev lines)
+na_centered <- centerSamples(na_gels)
+
+#generate user template
+na_template <- finalizedDF(
+  inputGel = na_centered,
+  sourceDF = exdf_na,
+  numReps = 2
+)
+```
+
+## Re-organize to nested list
+
+```{r}
+allresults <- list()
+
+allresults[["orig_centered"]] <- centeredGel
+allresults[["orig_template"]] <- user_template
+
+allresults[["na_centered"]] <- na_centered
+allresults[["na_template"]] <- na_template
+
+rm(centeredGel,user_template,na_centered,na_template)
+```
+
+## Manual gc
 
 ```{r}
 rm(ld)
+rm(gels)
+
+#uneven samples
+rm(subjects_raw,subjects_t)
+
+#account for NA values
+rm(exdf_na,na_gels)
 ```

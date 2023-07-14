@@ -33,6 +33,10 @@ shinyUI(navbarPage(title = "blobRig",
                             includeHTML("home.html"),
                    ),
                    
+                   # ---------------------------------- Gel
+                   tabPanel("Gel Creator",
+                   ),
+                   
                    # ---------------------------------- analyze
                    tabPanel("Analyze",
                             analyzer(),
