@@ -246,3 +246,13 @@ finalizedDF <- function(inputGel,sourceDF,numReps=1){
     dplyr::relocate(Gel_Number,.before=Technical_Replication)
   return(temp)
 }
+
+#'det num samples per line
+perLine_logic <- function(numLanes,numGroups){
+  if(numLanes>=numGroups+1){
+    temp <- floor(numLanes/numGroups)*numGroups
+  }
+  return(temp)
+}
+
+

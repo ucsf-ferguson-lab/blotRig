@@ -64,9 +64,20 @@ function(input, output, session) {
   output$view_samples <- renderDataTable({
     req(input$samples_upload)
     alldata[["samples"]] <- read_csv(input$samples_upload$datapath)
-    DT::datatable(alldata$samples,caption="Uploaded samples")
+    DT::datatable(alldata$samples,caption="Uploaded samples",
+                  extensions="Buttons",options=list(dom="Blfrtip",buttons="csv"))
   })
   
+  #total num samples (includes NA values)
+  alldata[["numSamples"]] <- reactive({
+    nrow(alldata$samples)*ncol(alldata$samples)
+  })
+  
+  output$num_samples <- renderText({
+    alldata$numSamples()
+  })
+  
+  #duplicate sample names
   alldata[["dupes"]] <- reactive({
     listDupes(alldata$samples)
   })
@@ -76,27 +87,33 @@ function(input, output, session) {
     cat(paste(alldata$dupes(),collapse="\n"))
   })
   
+  #'ifelse used to account for length(0)=1
+  #'return statement used to select/show single int rather than array
   output$num_dupes <- renderText({
-    length(alldata$dupes())
+    temp <- ifelse(alldata$dupes()==0,
+           (length(alldata$dupes()))-1,
+           length(alldata$dupes()))
+    return(temp[1])
   })
   
   #display order of samples on gel
   output$gel_orders <- renderDataTable({
     #create baseline gel
     temp <- gelBaseline(
-      totalSamples = 16,
-      perLine = 8,
+      totalSamples = alldata$numSamples(),
+      perLine = perLine_logic(input$num_lanes,ncol(alldata$samples)),
       entryID = as.vector(t(alldata$samples))
     ) %>%
       addCols(
-        numLanes = 11
+        numLanes = input$num_lanes
       ) %>%
       shiftLanes()
     
     #center & save
     alldata[["gel_order"]] <- centerSamples(temp)
     
-    DT::datatable(alldata$gel_order,caption="Order of Samples on gel")
+    DT::datatable(alldata$gel_order,caption="Order of Samples on gel",
+                  extensions="Buttons",options=list(dom="Blfrtip",buttons="csv"))
   })
   
   #create user template
@@ -104,7 +121,10 @@ function(input, output, session) {
     alldata[["user_template"]] <- finalizedDF(
       inputGel = alldata[["gel_order"]],
       sourceDF = alldata$samples,
-      numReps = 2
+      numReps = input$num_reps
     )
+    
+    DT::datatable(alldata$user_template,caption="Gel Template",
+                  extensions="Buttons",options=list(dom="Blfrtip",buttons="csv"))
   })
 }

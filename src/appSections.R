@@ -50,7 +50,8 @@ gelCreatorPage <- function(){
         3,wellPanel(
           h4("Upload samples"),
           fileInput("samples_upload","Upload your samples in a .csv file",accept="*.csv"),
-          
+          numericInput("num_lanes","Select the number of lanes per gel:",0,min=0), #can't have negatives
+          numericInput("num_reps","Enter number of technical replications:",1,min=1), #≥1 technical rep
           #instructions
           h5("Instructions:")
         )
@@ -58,7 +59,10 @@ gelCreatorPage <- function(){
       column(
         9,tabsetPanel(id="gelinfo",
           tabPanel(
-            "View uploaded samples",DT::dataTableOutput("view_samples")
+            "View uploaded samples",
+            DT::dataTableOutput("view_samples"),
+            h4("Maximum number of samples:"),
+            textOutput("num_samples")
           ),
           tabPanel(
             "Duplicate sample names",
