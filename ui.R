@@ -10,11 +10,14 @@ library(shinythemes)
 library(shinyjs)
 library(sortable)
 
+#load gelFunctions
+source("./src/gelFunctions.R")
+
 #load appFunctions
-source("appFunctions.R")
+source("./src/appFunctions.R")
 
 #load appSections
-source("appSections.R")
+source("./src/appSections.R")
 
 #load server
 source("server.R")
@@ -22,7 +25,7 @@ source("server.R")
 ## UI
 shinyUI(navbarPage(title = "blobRig",
                    theme = shinytheme("cerulean"),
-                   footer = includeHTML("footer.html"),
+                   footer = includeHTML("./frontend/footer.html"),
                    fluid = TRUE, 
                    collapsible = TRUE,
                    useShinyjs(),
@@ -30,11 +33,12 @@ shinyUI(navbarPage(title = "blobRig",
                    
                    # ---------------------------------- home
                    tabPanel("Home",
-                            includeHTML("home.html"),
+                            includeHTML("./frontend/home.html"),
                    ),
                    
                    # ---------------------------------- Gel
                    tabPanel("Gel Creator",
+                            gelCreatorPage(),
                    ),
                    
                    # ---------------------------------- analyze
@@ -44,7 +48,6 @@ shinyUI(navbarPage(title = "blobRig",
                    
                    # ---------------------------------- about
                    tabPanel("About",
-                            includeHTML("about.html")
+                            includeHTML("./frontend/about.html")
                    )
-                   
 ))

@@ -41,3 +41,45 @@ analyzer<-function(){
     )
   )
 }
+
+#create gel
+gelCreatorPage <- function(){
+  fluidPage(
+    fluidRow(
+      column(
+        3,wellPanel(
+          h4("Upload samples"),
+          fileInput("samples_upload","Upload your samples in a .csv file",accept="*.csv"),
+          
+          #instructions
+          h5("Instructions:")
+        )
+      ),
+      column(
+        9,tabsetPanel(id="gelinfo",
+          tabPanel(
+            "View uploaded samples",DT::dataTableOutput("view_samples")
+          ),
+          tabPanel(
+            "Duplicate sample names",
+            h4("Number of duplicate sample names:"),
+            textOutput("num_dupes"),
+            h4("The following sample names are duplicated:"),
+            textOutput("dupe_names")
+          ),
+          tabPanel(
+            "Gels",
+            h4("Each row represents a single gel."),
+            DT::dataTableOutput("gel_orders")
+          ),
+          tabPanel(
+            "User Template",
+            DT::dataTableOutput("gel_template")
+          )
+        )
+      )
+    )
+  )
+}
+
+

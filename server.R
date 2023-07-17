@@ -1,13 +1,5 @@
 # App server script
 
-# library(shiny)
-# library(lme4)
-# library(lmerTest)
-# library(tidyverse)
-# library(DT)
-# library(MASS)
-# install.packages("MASS")
-
 # source("appFunctions.R")
 
 function(input, output, session) {
@@ -65,4 +57,54 @@ function(input, output, session) {
 
   })
   
+  #store uploaded samples + other data
+  alldata <- reactiveValues()
+
+  #read + show uploaded samples
+  output$view_samples <- renderDataTable({
+    req(input$samples_upload)
+    alldata[["samples"]] <- read_csv(input$samples_upload$datapath)
+    DT::datatable(alldata$samples,caption="Uploaded samples")
+  })
+  
+  alldata[["dupes"]] <- reactive({
+    listDupes(alldata$samples)
+  })
+  
+  #show all duplicates
+  output$dupe_names <- renderPrint({
+    cat(paste(alldata$dupes(),collapse="\n"))
+  })
+  
+  output$num_dupes <- renderText({
+    length(alldata$dupes())
+  })
+  
+  #display order of samples on gel
+  output$gel_orders <- renderDataTable({
+    #create baseline gel
+    temp <- gelBaseline(
+      totalSamples = 16,
+      perLine = 8,
+      entryID = as.vector(t(alldata$samples))
+    ) %>%
+      addCols(
+        numLanes = 11
+      ) %>%
+      shiftLanes()
+    
+    #center & save
+    alldata[["gel_order"]] <- centerSamples(temp)
+    
+    DT::datatable(alldata$gel_order,caption="Order of Samples on gel")
+  })
+  
+  #create user template
+  output$gel_template <- renderDataTable({
+    alldata[["user_template"]] <- finalizedDF(
+      inputGel = alldata[["gel_order"]],
+      sourceDF = alldata$samples,
+      numReps = 2
+    )
+  })
 }

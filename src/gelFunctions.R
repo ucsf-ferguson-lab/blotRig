@@ -125,11 +125,12 @@ centerSamples <- function(inputDF){
       naIndex <- naIndex %>%
         dplyr::filter(col==min(col)|col==max(col)) %>%
         aggregate(col~row,FUN=c) %>%
-        dplyr::mutate(nastart=unlist(col[,1])) %>% #NA starts
-        dplyr::mutate(nastop=unlist(col[,2])) %>% #NA ends (typically ncol(inputDF))
+        #NA start & ends (end typically ncol(inputDf))
+        dplyr::mutate(nastart=unlist(col[,1]),
+                      nastop=unlist(col[,2])) %>%
         dplyr::select(-col) %>%
-        dplyr::mutate(lengthNA=nastop-nastart+1) %>% #add 1 for index
-        dplyr::mutate(gap=floor(lengthNA/2)) #calculate gap to shift by
+        dplyr::mutate(lengthNA=nastop-nastart+1, #add 1 for index
+                      gap=floor(lengthNA/2)) #calculate gap to shift by
       
       for(i in 1:nrow(naIndex)){
         temp <- as.list(inputDF[i,]) %>% 
