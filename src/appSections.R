@@ -48,12 +48,15 @@ gelCreatorPage <- function(){
     fluidRow(
       column(
         3,wellPanel(
-          h4("Upload samples"),
-          fileInput("samples_upload","Upload your samples in a .csv file",accept="*.csv"),
-          numericInput("num_lanes","Select the number of lanes per gel:",0,min=0), #can't have negatives
-          numericInput("num_reps","Enter number of technical replications:",1,min=1), #≥1 technical rep
-          #instructions
-          h5("Instructions:")
+          h4("Gel Loadings"),
+          h5("Instructions:"),
+          fileInput("samples_upload","1. Upload your samples in a .csv file",accept="*.csv"),
+          #can't have negatives
+          numericInput("num_lanes","2. Enter number of lanes per gel:",1,min=1),
+          #≥1 technical rep
+          numericInput("num_reps","3. Enter number of technical replications:",1,min=1),
+          h5("Allow a few seconds for content to automatically update."),
+          h5("Click on another tab to refresh the pages within `Gel Loadings`.")
         )
       ),
       column(

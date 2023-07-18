@@ -57,9 +57,23 @@ function(input, output, session) {
 
   })
   
+  #update num lanes (value + min)
+  observeEvent(input$samples_upload,{
+    req(input$samples_upload)
+    nLanes <- ncol(input$samples_upload)+1
+    updateNumericInput(session,"num_lanes",value=nLanes,min=nLanes)
+  })
+  
   #store uploaded samples + other data
   alldata <- reactiveValues()
 
+  #placeholders
+  alldata[["placeholder"]] <- reactive({
+    gelTemplate(input$num_lanes) %>%
+      addCols(input$num_lanes) %>%
+      as.data.frame()
+  })
+  
   #read + show uploaded samples
   output$view_samples <- renderDataTable({
     req(input$samples_upload)
@@ -79,25 +93,37 @@ function(input, output, session) {
   
   #duplicate sample names
   alldata[["dupes"]] <- reactive({
-    listDupes(alldata$samples)
+    temp <- listDupes(alldata$samples)
+    temp <- temp[!is.na(temp)]
+    if(length(temp)==0){
+      temp <- 0
+    }
+    temp
   })
   
   #show all duplicates
   output$dupe_names <- renderPrint({
+    req(input$samples_upload)
     cat(paste(alldata$dupes(),collapse="\n"))
   })
   
   #'ifelse used to account for length(0)=1
   #'return statement used to select/show single int rather than array
-  output$num_dupes <- renderText({
+  alldata[["num_dupes"]] <- reactive({
     temp <- ifelse(alldata$dupes()==0,
            (length(alldata$dupes()))-1,
            length(alldata$dupes()))
     return(temp[1])
   })
   
+  output$num_dupes <- reactive({
+    req(input$samples_upload)
+    alldata$num_dupes()
+  })
+  
   #display order of samples on gel
   output$gel_orders <- renderDataTable({
+    req(input$samples_upload)
     #create baseline gel
     temp <- gelBaseline(
       totalSamples = alldata$numSamples(),
@@ -112,19 +138,28 @@ function(input, output, session) {
     #center & save
     alldata[["gel_order"]] <- centerSamples(temp)
     
-    DT::datatable(alldata$gel_order,caption="Order of Samples on gel",
-                  extensions="Buttons",options=list(dom="Blfrtip",buttons="csv"))
+    if(alldata$num_dupes()==0){
+      DT::datatable(alldata$gel_order,caption="Order of Samples on gel",
+                    extensions="Buttons",options=list(dom="Blfrtip",buttons="csv"))
+    }else{
+      DT::datatable(alldata$placeholder(),caption="Placeholder")
+    }
   })
   
   #create user template
   output$gel_template <- renderDataTable({
+    req(input$samples_upload)
     alldata[["user_template"]] <- finalizedDF(
       inputGel = alldata[["gel_order"]],
       sourceDF = alldata$samples,
       numReps = input$num_reps
     )
     
-    DT::datatable(alldata$user_template,caption="Gel Template",
-                  extensions="Buttons",options=list(dom="Blfrtip",buttons="csv"))
+    if(alldata$num_dupes()==0){
+      DT::datatable(alldata$user_template,caption="Gel Template",
+                    extensions="Buttons",options=list(dom="Blfrtip",buttons="csv"))
+    }else{
+      DT::datatable(template_placeholder(),caption="Placeholder")
+    }
   })
 }

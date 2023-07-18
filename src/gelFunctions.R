@@ -249,9 +249,23 @@ finalizedDF <- function(inputGel,sourceDF,numReps=1){
 
 #'det num samples per line
 perLine_logic <- function(numLanes,numGroups){
-  if(numLanes>=numGroups+1){
+  if((numLanes-1)>=numGroups){
     temp <- floor(numLanes/numGroups)*numGroups
+  }else{
+    temp <- 0
   }
+  return(temp)
+}
+
+#'placeholder for final generated template
+template_placeholder <- function(){
+  col_names <- c("Sample_ID","Group","Gel_Number","Technical_Replication",
+                 "Lane","Protein_Quant")
+  
+  temp <- data.frame(
+    matrix(NA,nrow=1,ncol=length(col_names),dimnames=list(NULL,col_names)),
+    stringsAsFactors=FALSE
+  )
   return(temp)
 }
 

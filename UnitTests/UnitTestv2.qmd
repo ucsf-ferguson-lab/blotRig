@@ -8,7 +8,7 @@ editor_options:
 ## Load library + functions
 
 ```{r}
-source("./src/functions.R")
+source("./src/gelFunctions.R")
 
 gc()
 library(tidyverse)
@@ -122,9 +122,42 @@ centeredGel <- centerSamples(gels)
 
 Each row is considered a separate gel.
 
+### Dynamic version
+
+The following chunk works off of the uploaded csv file and only requires user input in form of `num_lanes`.
+
+```{r}
+#user input
+num_lanes <- 11
+
+gels <- gelBaseline(
+  totalSamples = ncol(exDF)*nrow(exDF),
+  perLine = perLine_logic(num_lanes,ncol(exDF)),
+  entryID = subjects
+) %>%
+  addCols(
+    numLanes = num_lanes
+  ) %>%
+  shiftLanes() %>%
+  centerSamples()
+```
+
+#### Per line logic
+
+Backend logic for deciding how to organize the gel loadings.
+
+```{r}
+#able to fit ≥1 per group per line
+perLine_logic(5,4)
+
+#'thorws 0 if unable to fit ≥1 per group per line
+#'0 won't break rest of functions, but won't get a gel output
+perLine_logic(3,4)
+```
+
 ## Export user template
 
-Create user template with everything except for quant filled in.
+Create user template with everything except for quant filled in. `numReps` is user input.
 
 ```{r}
 user_template <- finalizedDF(
@@ -171,6 +204,26 @@ na_template <- finalizedDF(
   sourceDF = exdf_na,
   numReps = 2
 )
+```
+
+### From csv
+
+```{r}
+na_test <- list()
+
+na_test[["na_csv"]] <- read_csv("./data/some_na.csv")
+na_test[["subjects"]] <- as.vector(t(na_test$na_csv))
+
+na_test[["na_gels"]] <- gelBaseline(
+  totalSamples = nrow(na_test$na_csv)*ncol(na_test$na_csv),
+  perLine = 8,
+  entryID = na_test$subjects
+) %>%
+  addCols(
+    numLanes = 11
+  ) %>%
+  shiftLanes() %>%
+  centerSamples()
 ```
 
 ## Re-organize to nested list
