@@ -106,42 +106,75 @@ addCols <- function(inputDF,numLanes){
 
 #'center the samples (not including ladder)
 centerSamples <- function(inputDF){
-  #det if even/odd num full NA cols
-  dfNA <-colSums(is.na(inputDF)) %>%
-    as.data.frame() %>%
-    filter(.==nrow(inputDF))
-  rownames(dfNA) <- NULL
-  names(dfNA) <- "Check"
+  #find num NA per row
+  dfNA <- numNA(inputDF)
   
+  #'can't center or no centering req
   if(nrow(dfNA)==1){
-    #'no centering req (placeholder)
     #'inputDF <- inputDF is not a good idea bcuz making extra copy, thus wasting memory
   }else{
-    naIndex <- which(is.na(inputDF),arr.ind=TRUE) %>%
-      as.data.frame()
+    naIndex <- index_temp(inputDF)
     
     #if there are NA cols
     if(nrow(naIndex)>=2){
-      naIndex <- naIndex %>%
-        dplyr::filter(col==min(col)|col==max(col)) %>%
-        aggregate(col~row,FUN=c) %>%
-        #NA start & ends (end typically ncol(inputDf))
-        dplyr::mutate(nastart=unlist(col[,1]),
-                      nastop=unlist(col[,2])) %>%
-        dplyr::select(-col) %>%
-        dplyr::mutate(lengthNA=nastop-nastart+1, #add 1 for index
-                      gap=floor(lengthNA/2)) #calculate gap to shift by
-      
-      for(i in 1:nrow(naIndex)){
-        temp <- as.list(inputDF[i,]) %>% 
-          unlist() %>%
-          append(rep(NA,naIndex$gap[i]),after=1) %>% #shift everything after Ladder over by gap
-          head(-naIndex$gap[i]) #rm same amount NA from end of list
-        
-        #overwrite lane in inputDf
-        inputDF[i,] <- temp
-      }
+      inputDF <- index_val(inputDF) %>%
+        right_shift(inputDF)
     }
+  }
+  return(inputDF)
+}
+
+#find all NA index in inputDF (used in centerSamples)
+index_temp <- function(inputDF){
+  temp <- which(is.na(inputDF),arr.ind=TRUE) %>%
+    as.data.frame()
+  return(temp)
+}
+
+#find num NA per row (used in centerSamples)
+numNA <- function(gelDF){
+  temp <- colSums(is.na(gelDF)) %>%
+    as.data.frame() %>%
+    dplyr::filter(.==nrow(gelDF))
+  rownames(temp) <- NULL
+  names(temp) <- "Check"
+  
+  return(temp)
+}
+
+#create index of NA start/end (used in centerSamples)
+index_val <- function(gelDF){
+  naIndex <- list()
+  
+  #prepare for inner_join
+  naIndex[["orig"]] <- index_temp(gelDF)
+  naIndex[["copy"]] <- index_temp(gelDF) %>%
+    dplyr::filter(duplicated(col)) 
+  
+  #det how many cols to shift by
+  naIndex_temp <- dplyr::inner_join(naIndex$orig,naIndex$copy,by="col") %>%
+    dplyr::select(-row.y) %>%
+    dplyr::mutate(nastart=min(col),
+                  nastop=max(col)) %>%
+    dplyr::mutate(lengthNA=nastop-nastart+1,
+                  gap=floor(lengthNA/2))
+  
+  #rm repeats
+  naIndex_v1 <- naIndex_temp[1:nrow(gelDF),]
+  
+  return(naIndex_v1)
+}
+
+#perform shift aka centering (used in centerSamples)
+right_shift <- function(naIndex,inputDF){
+  for(i in 1:nrow(naIndex)){
+    temp <- as.list(inputDF[i,]) %>% 
+      unlist() %>%
+      append(rep(NA,naIndex$gap[i]),after=1) %>% #shift everything after Ladder over by gap
+      head(-naIndex$gap[i]) #rm same amount NA from end of list
+    
+    #overwrite lane in inputDf
+    inputDF[i,] <- temp
   }
   return(inputDF)
 }
@@ -231,12 +264,12 @@ techRep <- function(inputDF,numReps){
 }
 
 #'create finalized template (glues all other functions together)
-  #'create template from inputGel (centered gel)
-  #'fill in groups from sourceDF
-  #'num of technical replications (default=1)
-  #'sort (rep,gel) 
-  #'  nchar(lane) before lane = 1,2,3... before 10
-  #'reorder
+#'create template from inputGel (centered gel)
+#'fill in groups from sourceDF
+#'num of technical replications (default=1)
+#'sort (rep,gel) 
+#'  nchar(lane) before lane = 1,2,3... before 10
+#'reorder
 finalizedDF <- function(inputGel,sourceDF,numReps=1){
   temp <- inputGel %>%
     templateOutput() %>%
