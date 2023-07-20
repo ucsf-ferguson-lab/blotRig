@@ -56,7 +56,8 @@ gelCreatorPage <- function(){
           #≥1 technical rep
           numericInput("num_reps","3. Enter number of technical replications:",1,min=1),
           h5("Allow a few seconds for content to automatically update."),
-          h5("Click on another tab to refresh the pages within `Gel Loadings`.")
+          h5("Click on another tab to refresh the pages within `Gel Loadings`."),
+          h5("Click on `csv` button to download a copy of the gel and/or template as a csv file.")
         )
       ),
       column(
