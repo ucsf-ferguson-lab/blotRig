@@ -1,0 +1,40 @@
+---
+title: "UnitTest"
+format: html
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+source("./src/functions.R")
+
+gc()
+library(tidyverse)
+```
+
+## Import Dataset
+
+```{r}
+exDF <- read_csv("./Sandbox/inputCSV.csv")
+as.vector(t(exDF))
+```
+
+### Duplicates
+
+```{r}
+#find duplicates
+exDF_dupes <- findDupes(exDF,"all")
+
+#list duplicates
+listDupes(exDF)
+```
+
+## Create Gel Templates
+
+```{r}
+template <- gelOrder(16,4,4,exDF_dupes$allNames)
+```
+
+```{r}
+rm(template)
+```

@@ -1,36 +1,53 @@
-## App ui script
-## Libraries
+#single script to start app
+
+#load req libraries
 library(shiny)
+library(lme4)
+library(lmerTest)
+library(tidyverse)
+library(DT)
 library(shinythemes)
 library(shinyjs)
 library(sortable)
 
-source("appSections.R")
+#load gelFunctions
+source("./src/gelFunctions.R")
+
+#load appFunctions
+source("./src/appFunctions.R")
+
+#load appSections
+source("./src/appSections.R")
+
+#load server
+source("server.R")
 
 ## UI
 shinyUI(navbarPage(title = "blobRig",
                    theme = shinytheme("cerulean"),
-                   footer = includeHTML("footer.html"),
+                   footer = includeHTML("./frontend/footer.html"),
                    fluid = TRUE, 
                    collapsible = TRUE,
                    useShinyjs(),
                    # position = c("fixed-top"),
                    
-                   # ----------------------------------
-                   # Home panel
+                   # ---------------------------------- home
                    tabPanel("Home",
-                            includeHTML("home.html"),
+                            includeHTML("./frontend/home.html"),
                    ),
                    
-                   # ----------------------------------
-                   tabPanel("Analize",
+                   # ---------------------------------- Gel
+                   tabPanel("Gel Creator",
+                            gelCreatorPage(),
+                   ),
+                   
+                   # ---------------------------------- analyze
+                   tabPanel("Analyze",
                             analyzer(),
                    ),
                    
-                   # ----------------------------------
-                   # TODO ( add About section)
+                   # ---------------------------------- about
                    tabPanel("About",
-                            includeHTML("about.html")
+                            includeHTML("./frontend/about.html")
                    )
-                   
 ))
