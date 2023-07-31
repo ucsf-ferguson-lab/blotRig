@@ -23,9 +23,9 @@ source("./src/appSections.R")
 source("server.R")
 
 ## UI
-shinyUI(navbarPage(title = "blobRig",
+shinyUI(navbarPage(title = "blotRig",
                    theme = shinytheme("cerulean"),
-                   footer = includeHTML("./frontend/footer.html"),
+                   # footer = includeHTML("./frontend/footer.html"),
                    fluid = TRUE, 
                    collapsible = TRUE,
                    useShinyjs(),

@@ -88,6 +88,10 @@ gelBaseline <- function(totalSamples,perLine,entryID){
       dplyr::mutate(ladder="Ladder") %>%
       dplyr::relocate(ladder,.before=1)
   }
+  
+    ## Add gel numbers
+  rownames(tempDF)<-paste("Gel", 1:nrow(tempDF),sep = " ")
+  
   return(tempDF)
 }
 
@@ -230,14 +234,15 @@ templateOutput <- function(inputGel){
     #convert to sample template output
     dplyr::mutate(
       TechnicalRep=NA,
-      Quant=NA
+      Quant=NA,
+      LoadQuant = NA
     ) %>%
     dplyr::relocate(c(V1,TechnicalRep),.before=1) %>%
     dplyr::filter(!is.na(V1))
   
   #rename colnames (always the same)
   names(elist) <- c("Sample_ID","Technical_Replication","Lane",
-                    "Gel_Number","Protein_Quant")
+                    "Gel_Number","Protein_Quant", "Load_Control_Quant")
   return(elist)
 }
 

@@ -7,16 +7,18 @@ analyzer<-function(){
                
                #upload csv file
                h4("Upload data"),
-               fileInput("file_upload", "Upload your file (.csv)", accept = "*.csv"),
+               fileInput("file_upload", "Upload your Protein Quant file (.csv)", accept = "*.csv"),
                
                #use example dataset
                actionButton("example", label = "Use example"),
                hr(),
                
                #select vars (can replace w/ drop-down menu)
-               textInput("response", "Name Response variable"),
+               textInput("response", "Name Protein Quantification variable"),
+               textInput("load_control", "Name Loading Control variable"),
                textInput("group", "Name Group variable"),
                textInput("subject", "Name Subject variable"),
+               textInput("techreplica", "Name Technical replicate variable"),
                
                #run analysis
                actionButton("run", label = "Run analysis")

@@ -11,13 +11,21 @@ function(input, output, session) {
     enable("run")
   })
   
+  updateTextInput(session, "response", value = "Protein_Quant")
+  updateTextInput(session, "load_control", value = "Load_Control_Quant")
+  updateTextInput(session, "group", value = "Group")
+  updateTextInput(session, "subject", value = "Subject_ID")
+  updateTextInput(session, "techreplica", value = "Technical_Replication")
+  
   observeEvent(input$example,{
-    values$upload<-read.csv("data/western_paper_data_06.01.23.csv",fileEncoding="UTF-8-BOM")
+    values$upload<-read.csv("data/SampleData_blotrigPaper.csv",fileEncoding="UTF-8-BOM")
     enable("run")
     
-    updateTextInput(session, "response", value = "TargetProtein")
-    updateTextInput(session, "group", value = "Group")
-    updateTextInput(session, "subject", value = "Subject")
+    # updateTextInput(session, "response", value = "Protein_Quant")
+    # updateTextInput(session, "load_control", value = "Load_Control_Quant")
+    # updateTextInput(session, "group", value = "Group")
+    # updateTextInput(session, "subject", value = "Subject_ID")
+    # updateTextInput(session, "techreplica", value = "Technical_Replication")
   })
   
   output$view_table<-renderDataTable({
@@ -45,7 +53,7 @@ function(input, output, session) {
     }
     
     if(!error){
-      formula_fit<-paste0(input$response,"~",input$group,"+(1|",input$subject,")")
+      formula_fit<-paste0(input$response,"~",input$group,"+",input$load_control,"+(",input$techreplica,"|" ,input$subject,")")
       values$fit<-lmer(as.formula(formula_fit), data =df)
       
       output$results<-renderPrint({
