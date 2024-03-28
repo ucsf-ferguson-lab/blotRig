@@ -306,5 +306,3 @@ template_placeholder <- function(){
   )
   return(temp)
 }
-
-

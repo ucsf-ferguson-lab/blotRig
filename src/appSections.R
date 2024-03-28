@@ -91,5 +91,3 @@ gelCreatorPage <- function(){
     )
   )
 }
-
-

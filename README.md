@@ -1,6 +1,6 @@
 # blotRig
 
-    **The blotRig app is in beta, please open an issue if you find errors or have ideas about improving the package**
+> The blotRig app is in beta, please open an issue if you find errors or have ideas about improving the package.
 
 ## How to run the app
 
