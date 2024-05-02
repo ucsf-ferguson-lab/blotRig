@@ -13,7 +13,7 @@ package_list <- c(
 )
 
 install.packages(package_list)
-devtools::install_github("ucsf-ferguson-lab/blotRig",ref="pkg")
+devtools::install_github("ucsf-ferguson-lab/blotRig")
 
 rm(package_list)
 gc()

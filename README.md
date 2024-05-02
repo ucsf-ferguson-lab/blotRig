@@ -8,7 +8,7 @@ blotRig is a user-friendly interface designed to facilitate appropriate counterb
 
 ## Install blotRig 
 
-The following line of code will install blotRig along with it's dependencies.
+The following single line of code will install `blotRig` along with all required dependencies.
 
 ```{r}
 source("https://raw.githubusercontent.com/ucsf-ferguson-lab/blotRig/main/Setup/installdep.R")
@@ -25,7 +25,7 @@ blotRig::start_blotrig()
 
 Now you're ready to go! You can use blotRig to design western blot experiments, create counter-balanced gel maps, and analyze your data once collected. 
 
-In the future, when you want to use the blotRig program, just follow these 'Run blotRig' steps.
+In the future, when you want to use the blotRig program, just follow these `Run blotRig` steps.
 
 ## Links
 For more information and/or view source code, visit: [blotRig repo](https://github.com/ucsf-ferguson-lab/blotRig)
