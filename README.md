@@ -26,7 +26,7 @@ source("https://raw.githubusercontent.com/ucsf-ferguson-lab/blotRig/main/Setup/i
 ## Run blotRig
 Now that you have downloaded the blotRig folder to your computer and installed the necessary packages, it's time to run the program. Follow these steps to get going:
 
-1. Navigate to the place on your computer where you saved the 'blotRig-main' folder and Open.
+1. Navigate to the place on your computer where you saved the `blotRig-main` folder and Open.
 2. Click on the  `blotRig.Rproj` file. This will open in RStudio. 
 3. Copy and paste the following lines of code into RStudio, and run them both:
 
