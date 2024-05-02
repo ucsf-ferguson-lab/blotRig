@@ -13,9 +13,6 @@ library(sortable)
 #load gelFunctions
 source("./src/gelFunctions.R")
 
-#load appFunctions
-source("./src/appFunctions.R")
-
 #load appSections
 source("./src/appSections.R")
 
