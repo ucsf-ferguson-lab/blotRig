@@ -11,10 +11,10 @@ library(shinyjs)
 library(sortable)
 
 #load gelFunctions
-source("./src/gelFunctions.R")
+source("gelFunctions.R")
 
 #load appSections
-source("./src/appSections.R")
+source("appSections.R")
 
 #load server
 source("server.R")
@@ -23,26 +23,26 @@ source("server.R")
 shinyUI(navbarPage(title = "blotRig",
                    theme = shinytheme("cerulean"),
                    # footer = includeHTML("./frontend/footer.html"),
-                   fluid = TRUE, 
+                   fluid = TRUE,
                    collapsible = TRUE,
                    useShinyjs(),
                    # position = c("fixed-top"),
-                   
+
                    # ---------------------------------- home
                    tabPanel("Home",
                             includeHTML("./frontend/home.html"),
                    ),
-                   
+
                    # ---------------------------------- Gel
                    tabPanel("Gel Creator",
                             gelCreatorPage(),
                    ),
-                   
+
                    # ---------------------------------- analyze
                    tabPanel("Analyze",
                             analyzer(),
                    ),
-                   
+
                    # ---------------------------------- about
                    tabPanel("About",
                             includeHTML("./frontend/about.html")
