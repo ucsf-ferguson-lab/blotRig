@@ -8,7 +8,21 @@ For more information and/or view source code, visit: [blotRig repo](https://gith
 
 ## Install
 
+Run the following lines of code to download the source files and install the required R libraries.
+
+```{r}
+#download repo
+source("https://raw.githubusercontent.com/ucsf-ferguson-lab/blotRig/main/Setup/repodownload.R")
+
+#install required R libraries
+source("https://raw.githubusercontent.com/ucsf-ferguson-lab/blotRig/main/Setup/installdep.R")
+```
+
 ## Run blotRig
+
+1. Open `blotRig-main` folder 
+2. Run `blotRig.Rproj` file
+3. Run the following lines of code:
 
 ```{r}
 library(shiny)
