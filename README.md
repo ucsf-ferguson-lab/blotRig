@@ -8,7 +8,16 @@ For more information and/or view source code, visit: [blotRig repo](https://gith
 
 ## Install
 
+Run the following lines of code.
+
+```{r}
+
+```
+
 ## Run blotRig
+
+1. Open folder and run `blotRig.Rproj`
+2. Run the following lines of code.
 
 ```{r}
 library(shiny)
