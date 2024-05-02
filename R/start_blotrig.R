@@ -12,5 +12,6 @@ start_blotrig <- function(){
     library(sortable)
 
     #start shiny app from subdir
-    shiny::runApp("R/appfiles")
+    appdir <- system.file("appfiles",package="blotrig")
+    shiny::runApp(appdir)
 }
