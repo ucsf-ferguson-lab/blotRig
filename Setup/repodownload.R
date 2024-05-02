@@ -1,6 +1,8 @@
 #'download GH repo
   #'download file -> unzip -> rm zip
-dl_file <- function(){
+dl_file <- function(desktop){
+  setwd(dir=desktop)
+  
   filename <- "blotRig.zip"
   download.file(
     url="https://github.com/ucsf-ferguson-lab/blotRig/archive/refs/heads/main.zip",
@@ -8,6 +10,8 @@ dl_file <- function(){
   )
   unzip(zipfile=filename)
   file.remove(filename)
+
+  cat("blotRig repo has been downloaded to: ",desktop,sep="")
 }
 
 #prompt user for username
@@ -22,17 +26,13 @@ if(!is.na(username)){
   
   if(user_os=="Darwin"){
     desktop <- paste("/Users",username,"Desktop",sep="/")
-    setwd(dir=desktop)
-    dl_file()
-    cat("blotRig repo has been downloaded to: ",desktop,sep="")
+    dl_file(desktop)
   }
   
   if(user_os=="Windows"){
     desktop <- paste("C:","Users",username,"Desktop",sep="\\")
-    setwd(dir=desktop)
-    dl_file()
-    cat("blotRig repo has been downloaded to: ",desktop,sep="")
+    dl_file(desktop)
   }
 }
 
-rm(desktop,username,user_os,filename)
+rm(desktop,username,user_os)
