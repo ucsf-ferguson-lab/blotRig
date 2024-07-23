@@ -1,14 +1,17 @@
 #single script to start app
 
 #load req libraries
-# library(shiny)
-# library(lme4)
-# library(lmerTest)
-# library(tidyverse)
-# library(DT)
-# library(shinythemes)
-# library(shinyjs)
-# library(sortable)
+library(shiny)
+library(nlopt)
+library(lme4)
+library(lmerTest)
+library(tidyverse)
+library(DT)
+library(shinythemes)
+library(shinyjs)
+library(sortable)
+library(effects)
+library(plotly)
 
 #load gelFunctions
 source("gelFunctions.R")

@@ -5,73 +5,94 @@
 function(input, output, session) {
   disable("run")
   values<-reactiveValues()
-  
+
   observeEvent(input$file_upload,{
     values$upload<-read.csv(input$file_upload[["datapath"]],fileEncoding="UTF-8-BOM")
     enable("run")
   })
-  
+
   updateTextInput(session, "response", value = "Protein_Quant")
   updateTextInput(session, "load_control", value = "Load_Control_Quant")
   updateTextInput(session, "group", value = "Group")
   updateTextInput(session, "subject", value = "Subject_ID")
   updateTextInput(session, "techreplica", value = "Technical_Replication")
-  
+
   observeEvent(input$example,{
     values$upload<-read.csv("data/SampleData_blotrigPaper.csv",fileEncoding="UTF-8-BOM")
     enable("run")
-    
+
     # updateTextInput(session, "response", value = "Protein_Quant")
     # updateTextInput(session, "load_control", value = "Load_Control_Quant")
     # updateTextInput(session, "group", value = "Group")
     # updateTextInput(session, "subject", value = "Subject_ID")
     # updateTextInput(session, "techreplica", value = "Technical_Replication")
   })
-  
+
   output$view_table<-renderDataTable({
     DT::datatable(values$upload, caption = "Your data")
   })
-  
+
   observeEvent(input$run,{
-    df<-values$upload
+    dat<<-values$upload
     error<-FALSE
-    
-    if(!input$response %in% colnames(df)){
+
+    if(!input$response %in% colnames(dat)){
       ## error message
       print(error)
       error<-TRUE
     }
-    
-    if(!input$group %in% colnames(df)){
+
+    if(!input$group %in% colnames(dat)){
       ## error message
       error<-TRUE
     }
-    
-    if(!input$subject %in% colnames(df)){
+
+    if(!input$subject %in% colnames(dat)){
       ## error message
       error<-TRUE
     }
-    
+
     if(!error){
       formula_fit<-paste0(input$response,"~",input$group,"+",input$load_control,"+(",input$techreplica,"|" ,input$subject,")")
-      values$fit<-lmer(as.formula(formula_fit), data =df)
-      
+      values$fit<-lmer(as.formula(formula_fit), data =dat)
+
+      values$eff_res<-effects::effect(term = input$group, mod = values$fit)
+      values$eff<-as.data.frame(values$eff_res)%>%
+          mutate_if(is.numeric, round, 3)
+
       output$results<-renderPrint({
         anova(values$fit)
       })
-      
+      output$res_plot<-renderPlotly({
+
+          p<-ggplot(values$eff, aes_string(input$group, y = "fit"))+
+              geom_col(aes_string(fill = input$group))+
+              geom_errorbar(aes(ymin = lower, ymax=upper), width = 0.4)+
+              xlab(NULL)+
+              ylab("Mean effect estimate (95% CI)")+
+              theme_minimal()
+
+          ggplotly(p)
+
+      })
+      output$res_table<-renderDT({
+          DT::datatable(values$eff,
+                        extensions = "Buttons",
+                        options = list(dom = 'tB', buttons = c('copy', 'csv')))
+      })
+
       updateTabsetPanel(session, inputId = "tabset", "Results")
     }
 
   })
-  
+
   #update num lanes (value + min)
   observeEvent(input$samples_upload,{
     req(input$samples_upload)
     nLanes <- ncol(input$samples_upload)+1
     updateNumericInput(session,"num_lanes",value=nLanes,min=nLanes)
   })
-  
+
   #store uploaded samples + other data
   alldata <- reactiveValues()
 
@@ -81,7 +102,7 @@ function(input, output, session) {
       addCols(input$num_lanes) %>%
       as.data.frame()
   })
-  
+
   #read + show uploaded samples
   output$view_samples <- renderDataTable({
     req(input$samples_upload)
@@ -89,16 +110,16 @@ function(input, output, session) {
     DT::datatable(alldata$samples,caption="Uploaded samples",
                   extensions="Buttons",options=list(dom="Blfrtip",buttons="csv"))
   })
-  
+
   #total num samples (includes NA values)
   alldata[["numSamples"]] <- reactive({
     nrow(alldata$samples)*ncol(alldata$samples)
   })
-  
+
   output$num_samples <- renderText({
     alldata$numSamples()
   })
-  
+
   #duplicate sample names
   alldata[["dupes"]] <- reactive({
     temp <- listDupes(alldata$samples)
@@ -108,13 +129,13 @@ function(input, output, session) {
     }
     temp
   })
-  
+
   #show all duplicates
   output$dupe_names <- renderPrint({
     req(input$samples_upload)
     cat(paste(alldata$dupes(),collapse="\n"))
   })
-  
+
   #'ifelse used to account for length(0)=1
   #'return statement used to select/show single int rather than array
   alldata[["num_dupes"]] <- reactive({
@@ -123,12 +144,12 @@ function(input, output, session) {
            length(alldata$dupes()))
     return(temp[1])
   })
-  
+
   output$num_dupes <- reactive({
     req(input$samples_upload)
     alldata$num_dupes()
   })
-  
+
   #display order of samples on gel
   output$gel_orders <- renderDataTable({
     req(input$samples_upload)
@@ -142,10 +163,10 @@ function(input, output, session) {
         numLanes = input$num_lanes
       ) %>%
       shiftLanes()
-    
+
     #center & save
     alldata[["gel_order"]] <- centerSamples(temp)
-    
+
     if(alldata$num_dupes()==0){
       DT::datatable(alldata$gel_order,caption="Order of Samples on gel",
                     extensions="Buttons",options=list(dom="Blfrtip",buttons="csv"))
@@ -153,7 +174,7 @@ function(input, output, session) {
       DT::datatable(alldata$placeholder(),caption="Placeholder")
     }
   })
-  
+
   #create user template
   output$gel_template <- renderDataTable({
     req(input$samples_upload)
@@ -162,7 +183,7 @@ function(input, output, session) {
       sourceDF = alldata$samples,
       numReps = input$num_reps
     )
-    
+
     if(alldata$num_dupes()==0){
       DT::datatable(alldata$user_template,caption="Gel Template",
                     extensions="Buttons",options=list(dom="Blfrtip",buttons="csv"))

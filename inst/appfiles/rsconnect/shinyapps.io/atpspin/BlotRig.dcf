@@ -1,0 +1,11 @@
+name: BlotRig
+title: BlotRig
+username:
+account: atpspin
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 11979740
+bundleId: 8898993
+url: https://atpspin.shinyapps.io/BlotRig/
+asMultiple: FALSE
+asStatic: FALSE
