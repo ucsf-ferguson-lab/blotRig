@@ -34,4 +34,4 @@ For more information and/or view source code, visit: [blotRig repo](https://gith
 |---|---|
 |Repo|https://github.com/ucsf-ferguson-lab/blotRig|
 |Releases|https://github.com/ucsf-ferguson-lab/blotRig/releases/|
-|Publication|-|
+|Publication|https://doi.org/10.1038/s41598-024-70096-0|
